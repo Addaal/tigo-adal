@@ -1,0 +1,14 @@
+server:
+  port: 8080
+  address: 0.0.0.0  # Important to accept external requests
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:creaturedb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
