@@ -4,6 +4,7 @@ package com.adal.tigo.controller.advicer;
 import com.adal.tigo.Exception.CreatureException;
 import com.adal.tigo.model.Creature;
 import com.adal.tigo.model.GenericResponse;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -38,16 +39,18 @@ public class CreatureGlobalHandler {
 
     }
 
-    @ExceptionHandler(Throwable.class)
-    public ResponseEntity<GenericResponse> globalHandler(CreatureException e){
-        return ResponseEntity.internalServerError().body(
-                new GenericResponse(
-                        e.getTimestamp(),
-                        e.getCode(),
-                        e.getDetails(),
-                        e.getHttpStatus()
-                )
+    @ExceptionHandler(CreatureException.class)
+    public ResponseEntity<GenericResponse> globalHandler(CreatureException e) {
+        GenericResponse response = new GenericResponse(
+                e.getTimestamp(),
+                e.getCode(),
+                e.getDetails(),
+                e.getHttpStatus()
         );
+
+        return ResponseEntity
+                .status(HttpStatusCode.valueOf(response.getStatus()))
+                .body(response);
     }
 
 
