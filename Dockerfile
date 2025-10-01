@@ -17,20 +17,19 @@
 #
 #
 
-# Use official Java 21 slim image
+FROM gradle:8.7-jdk21 AS builder
+WORKDIR /app
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle ./gradle
+
+RUN ./gradlew dependencies --no-daemon || return 0
+COPY src ./src
+RUN ./gradlew bootJar --no-daemon
+
+
 FROM openjdk:21-jdk-slim
-
-# Set environment variables
-ENV APP_HOME=/app \
-    PORT=8080
-
-WORKDIR $APP_HOME
-
-# Copy the built JAR into the container
-COPY target/*.jar app.jar
-
-# Expose the port Render will map
+WORKDIR /app
+COPY --from=builder /app/build/libs/*.jar app.jar
+ENV PORT=8080
 EXPOSE $PORT
-
-# Run the Spring Boot application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
