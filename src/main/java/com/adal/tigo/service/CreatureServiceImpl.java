@@ -5,6 +5,7 @@ import com.adal.tigo.Exception.CreatureException;
 import com.adal.tigo.Exception.ErrorCodes;
 import com.adal.tigo.controller.CreatureApi;
 import com.adal.tigo.dao.CreatureDao;
+import com.adal.tigo.dao.CreatureFilter;
 import com.adal.tigo.model.Creature;
 import com.adal.tigo.model.Datatable;
 import com.adal.tigo.validator.ValidateCreature;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.security.Timestamp;
@@ -61,17 +63,13 @@ public class CreatureServiceImpl implements CreatureService{
         Sort sort = orderBy.equalsIgnoreCase("asc") ? Sort.by("createdAt").ascending() : Sort.by("createdAt").descending();
         Pageable pageable = PageRequest.of(0, offset, sort);
 
-        Page<Creature> pageResult;
-        if (name != null && active != null) {
-            pageResult = creatureDao.findByNameContainingIgnoreCaseAndActive(name, active, pageable);
-        } else if (name != null) {
-            pageResult = creatureDao.findByNameContainingIgnoreCase(name, pageable);
-        } else if (active != null) {
-            pageResult = creatureDao.findByActive(active, pageable);
-        } else {
-            pageResult = creatureDao.findAll(pageable);
-        }
 
+        Specification<Creature> spec = Specification.allOf(
+                CreatureFilter.nameContains(name),
+                CreatureFilter.isActive(active)
+                );
+
+        Page<Creature> pageResult = creatureDao.findAll(spec, pageable);
         creatures = pageResult.getContent();
 
 
