@@ -8,6 +8,7 @@ import com.adal.tigo.dao.CreatureDao;
 import com.adal.tigo.dao.CreatureFilter;
 import com.adal.tigo.model.Creature;
 import com.adal.tigo.model.Datatable;
+import com.adal.tigo.model.Filters;
 import com.adal.tigo.validator.ValidateCreature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,35 +52,55 @@ public class CreatureServiceImpl implements CreatureService{
     }
 
     @Override
-    public Datatable<Creature> getCreaturesByParams(String name, Boolean active, String orderBy, Integer offset) {
-        List<Creature> creatures;
-        if(orderBy == null){
-            orderBy = "desc";
+    public Datatable<Creature> getCreaturesByParams(Filters filters) throws CreatureException {
+
+        String orderBy = filters.getOrderBy();
+        String name = filters.getName();
+        Integer size = filters.getSize();
+        Integer pageNumber = filters.getPage();
+        Boolean active = filters.getActive();
+
+        try {
+            List<Creature> creatures;
+            if (orderBy == null) {
+                orderBy = "desc";
+            }
+            if (size == null || size == 0) {
+                size = 5;
+            }
+            if (pageNumber == null) {
+                pageNumber = 0;
+            }
+
+            Sort sort = orderBy.equalsIgnoreCase("asc") ? Sort.by("createdAt").ascending() : Sort.by("createdAt").descending();
+            Pageable pageable = PageRequest.of(pageNumber, size, sort);
+
+
+            Specification<Creature> spec = Specification.allOf(
+                    CreatureFilter.nameContains(name),
+                    CreatureFilter.isActive(active)
+            );
+
+            Page<Creature> pageResult = creatureDao.findAll(spec, pageable);
+            creatures = pageResult.getContent();
+
+
+            return new Datatable<>(
+                    creatures,
+                    (int) pageResult.getTotalElements(),
+                    pageNumber,
+                    size
+
+            );
+        }catch (Exception e)
+        {
+            throw new CreatureException(
+                    java.time.Instant.now().toString(),
+                    ErrorCodes.COMMUNICATION,
+                    e.getMessage(),
+                    400
+            );
         }
-        if(offset == null || offset == 0){
-            offset = 5;
-        }
-
-        Sort sort = orderBy.equalsIgnoreCase("asc") ? Sort.by("createdAt").ascending() : Sort.by("createdAt").descending();
-        Pageable pageable = PageRequest.of(0, offset, sort);
-
-
-        Specification<Creature> spec = Specification.allOf(
-                CreatureFilter.nameContains(name),
-                CreatureFilter.isActive(active)
-                );
-
-        Page<Creature> pageResult = creatureDao.findAll(spec, pageable);
-        creatures = pageResult.getContent();
-
-
-        return new Datatable<>(
-                creatures,
-                (int) pageResult.getTotalElements(),
-                creatures.size(),
-                offset
-
-        );
 
     }
 

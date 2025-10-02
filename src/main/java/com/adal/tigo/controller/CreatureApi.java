@@ -4,6 +4,7 @@ package com.adal.tigo.controller;
 import com.adal.tigo.Exception.CreatureException;
 import com.adal.tigo.model.Creature;
 import com.adal.tigo.model.Datatable;
+import com.adal.tigo.model.Filters;
 import com.adal.tigo.service.CreatureService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,13 +48,10 @@ public class CreatureApi {
 
     @GetMapping("/creatures")
     public Datatable<Creature> getCreaturesByParams(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) Boolean active,
-            @RequestParam(required = false) String orderBy,
-            @RequestParam(required = false) Integer offset
-    ) {
-        logger.info("Getting creatures by params - name: {}, active: {}", name, active);
-        return creatureService.getCreaturesByParams(name, active, orderBy, offset);
+            Filters filters
+    ) throws CreatureException {
+        logger.info("Getting creatures by params: {}", filters);
+        return creatureService.getCreaturesByParams(filters);
     }
 
 }

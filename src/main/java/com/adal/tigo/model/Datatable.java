@@ -11,6 +11,6 @@ public class Datatable<T> {
 
     private List<T> data;
     private long totalElements;
+    private int page;
     private int size;
-    private int offset;
 }
